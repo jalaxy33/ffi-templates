@@ -1,0 +1,10 @@
+[package]
+name = "cpp-to-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cxx = "1.0.185"
+
+[build-dependencies]
+cxx-build = { version = "1.0.185", features = ["parallel"] }

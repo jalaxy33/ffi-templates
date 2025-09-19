@@ -1,0 +1,11 @@
+# IDE stuff
+.vscode/
+
+# build targets
+build/
+target/
+.venv/
+out/
+
+# version control
+*.lock
