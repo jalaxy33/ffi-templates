@@ -1,0 +1,12 @@
+[package]
+name = "rust-to-cpp"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+
+[build-dependencies]
+cbindgen = "0.29.0"

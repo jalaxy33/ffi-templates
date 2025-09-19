@@ -1,0 +1,78 @@
+#pragma once
+
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <string>
+#include <filesystem>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+namespace py = pybind11;
+
+// Configure Python home environment (must be called before interpreter initialization)
+void configure_python_home()
+{
+#ifdef _WIN32
+#ifdef PYTHON_HOME_PATH
+    SetEnvironmentVariableA("PYTHONHOME", PYTHON_HOME_PATH);
+#endif
+#endif
+}
+
+// Setup virtual environment paths (must be called after interpreter initialization)
+void setup_virtual_environment()
+{
+#ifdef VENV_PACKAGES_DIR
+    std::string venv_packages_dir = VENV_PACKAGES_DIR;
+
+    // Convert backslashes to forward slashes for Python path compatibility
+    for (char &c : venv_packages_dir)
+    {
+        if (c == '\\')
+            c = '/';
+    }
+
+    // Add virtual environment path to sys.path if it exists and not already added
+    std::string setup_code =
+        "import sys\n"
+        "import os\n"
+        "venv_path = r'" + venv_packages_dir + "'\n"
+        "if os.path.exists(venv_path) and venv_path not in sys.path:\n"
+        "    sys.path.insert(0, venv_path)\n";
+
+    py::exec(setup_code);
+#endif
+}
+
+// Add python script directory to sys.path (must be called after interpreter initialization).
+// `script_dir` is relative to project root, default is "src"
+void setup_script_directory(std::string script_dir = "src")
+{
+    // this would be different based on your project structure
+    auto project_root = std::filesystem::path(__FILE__).parent_path().parent_path();
+    auto script_abs_dir = project_root.append(script_dir).string();
+
+    // Check if the directory exists
+    if (!std::filesystem::exists(script_abs_dir) || !std::filesystem::is_directory(script_abs_dir))
+    {
+        std::cerr << "Script directory does not exist: " << script_abs_dir << std::endl;
+        throw std::runtime_error("Script directory does not exist: " + script_abs_dir);
+    }
+    
+    // Convert backslashes to forward slashes for Python path compatibility
+    for (char &c : script_abs_dir)
+    {
+        if (c == '\\')
+            c = '/';
+    }
+
+    std::string setup_code =
+        "import sys, os\n"
+        "src_path = os.path.abspath('" + script_abs_dir + "')\n"
+        "if src_path not in sys.path:\n"
+        "    sys.path.insert(0, src_path)\n";
+
+    py::exec(setup_code);
+}

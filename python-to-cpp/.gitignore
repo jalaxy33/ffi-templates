@@ -1,0 +1,20 @@
+# IDE files
+.vscode/
+
+# build files
+build/
+dist/
+target/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Jupyter Notebook checkpoints
+*.ipynb_checkpoints/
+
+
+# version control
+.python-version
+*.lock
+

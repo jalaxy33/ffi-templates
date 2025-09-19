@@ -1,0 +1,28 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11", "pybind11-stubgen"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "cpp-to-python"
+version = "0.1.0"
+description = "Create C++ extension for python using pybind11."
+readme = "README.md"
+authors = [
+    { name = "_name", email = "_@example.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.scikit-build]
+# build-dir = "build"
+cmake.args = ["-DBUILD_EXTENSION=ON"]
+
+
+[[tool.scikit-build.generate]]
+path = "cpp_to_python/__init__.py"
+template = '''
+from ._core import *
+
+__version__ = "${version}"
+'''
+
