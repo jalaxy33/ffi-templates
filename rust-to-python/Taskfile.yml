@@ -1,0 +1,42 @@
+# https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  # --------- Build extensions ---------
+
+  default:
+    desc: Build and develop Rust extension
+    cmds:
+      - task: develop
+
+  init:
+    desc: Initialize the dependencies
+    cmds:
+      - uv sync
+      
+  stubgen:
+    desc: Generate stub file
+    cmds:
+      - cargo run --bin stubgen
+    deps:
+      - init
+
+  develop:
+    desc: Build the Rust extension
+    cmds:
+      - uv run maturin develop
+    deps:
+      - stubgen
+
+  # --------- Run tests ---------
+
+  test-py:
+    desc: Run the Python tests
+    cmds:
+      - uv run tests/test.py
+
+  test-rs:
+    desc: Run the Rust tests
+    cmds:
+      - cargo test

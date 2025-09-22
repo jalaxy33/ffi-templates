@@ -1,0 +1,25 @@
+# build artifacts
+build/
+target/
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/.pytest_cache/
+**/*.py[cod]
+
+
+# Distribution / packaging
+.venv/
+
+# VSCode
+.vscode/
+
+# Pyenv
+.python-version
+
+# version locks
+*.lock
+
+# generated stub files
+*.pyi
+
