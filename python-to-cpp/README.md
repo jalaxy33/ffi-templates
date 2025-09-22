@@ -6,12 +6,12 @@ A simple template to demonstrate how to call python functions in C++.
 
 - **C++ compiler**: g++/clang++/MSVC (C++17 or above)
 - **[CMake](https://cmake.org/download/) build tools**
-- **[uv](https://docs.astral.sh/uv/) python manager** 
+- **[uv](https://docs.astral.sh/uv/) python manager**
 
 
 ## Toolchain
 
-- [pybind11](https://pybind11.readthedocs.io/): for seamless integration between C++ and Python. Install it via uv: `uv add pybind11 --dev`. 
+- [pybind11](https://pybind11.readthedocs.io/): for seamless integration between C++ and Python. Install it via uv: `uv add pybind11 --dev`.
 
 
 ## Usage
@@ -24,7 +24,7 @@ uv sync
 cmake -B build && cmake --build build  # Debug build
 cmake -B build && cmake --build build --config Release  # Release build
 
-# 3. Run the executable, change `demo` to actual target name 
+# 3. Run the executable, change `demo` to actual target name
 ./build/Debug/demo.exe  # On Windows
 ./build/Debug/demo      # On Linux/Mac
 ```
@@ -68,7 +68,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE pybind11::embed)
 
 **Windows specific**: Copy `pythonXX.dll` to target output directory:
 
-```cmake 
+```cmake
 # Get python info
 execute_process(
     COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('installed_platbase'))"
@@ -99,7 +99,7 @@ if(WIN32)
     else()
         message(FATAL_ERROR "Python DLL not found at: ${PYTHON_DLL_PATH}")
     endif()
-    
+
 endif()
 ```
 
@@ -215,7 +215,7 @@ void setup_script_directory(std::string script_dir = "src")
         std::cerr << "Script directory does not exist: " << script_abs_dir << std::endl;
         throw std::runtime_error("Script directory does not exist: " + script_abs_dir);
     }
-    
+
     // Convert backslashes to forward slashes for Python path compatibility
     for (char &c : script_abs_dir)
     {
@@ -245,10 +245,3 @@ int result = add_func(3, 4).cast<int>();
 std::cout << "Result of example.add(3, 4)=" << result << std::endl;
 
 ```
-
-
-
-
-
-
-

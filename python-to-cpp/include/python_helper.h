@@ -60,7 +60,7 @@ void setup_script_directory(std::string script_dir = "src")
         std::cerr << "Script directory does not exist: " << script_abs_dir << std::endl;
         throw std::runtime_error("Script directory does not exist: " + script_abs_dir);
     }
-    
+
     // Convert backslashes to forward slashes for Python path compatibility
     for (char &c : script_abs_dir)
     {

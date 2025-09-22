@@ -14,7 +14,7 @@ endif()
 set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})  # for compatibility with pybind11
 
 if (NOT EXISTS ${PYTHON_EXECUTABLE})
-    message(FATAL_ERROR "Python executable not found at ${PYTHON_EXECUTABLE}. Please create a virtual environment at ${PYTHON_VENV_DIR} and install the required packages.")
+    message(FATAL_ERROR "Python executable not found at ${PYTHON_EXECUTABLE}. Please create a virtual environment at ${PYTHON_VENV_DIR} and install the required packages.")   
 endif()
 
 # set pybind11 dependency
@@ -69,7 +69,7 @@ if(WIN32)
     else()
         message(FATAL_ERROR "Python DLL not found at: ${PYTHON_DLL_PATH}")
     endif()
-    
+
 endif()
 
 
@@ -85,4 +85,3 @@ set(VENV_PACKAGES_DIR "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages")
 string(REPLACE "\\" "\\\\" VENV_PACKAGES_DIR_ESCAPED "${VENV_PACKAGES_DIR}")
 # set compile flag (VENV_PACKAGES_DIR)
 target_compile_definitions(${TARGET_NAME} PRIVATE VENV_PACKAGES_DIR="${VENV_PACKAGES_DIR_ESCAPED}")
-
