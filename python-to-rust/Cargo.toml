@@ -1,0 +1,16 @@
+[package]
+name = "python-to-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "python_to_rust"
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[dependencies]
+pyo3 = { version = "0.26.0", features = ["auto-initialize"] }

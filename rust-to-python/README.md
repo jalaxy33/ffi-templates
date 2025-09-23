@@ -181,7 +181,7 @@ A `.pyi` file will be generated in the crate root directory (e.g. `rust_to_pytho
 
 ### [Optional] 5. Run pyo3 in Rust codes
 
-If you want to run rust codes that use pyo3 (e.g. for testing), make sure the Python environment is correctly set.
+If you want to run rust codes that use pyo3 (e.g. [tests/test.rs](./tests/test.rs)), make sure the Python environment is correctly set.
 
 pyo3 requires Python executable to be found in the environment. You can set the `VIRTUAL_ENV` environment variable in [.cargo/config.toml](./.cargo/config.toml):
 

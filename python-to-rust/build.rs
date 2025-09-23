@@ -28,6 +28,22 @@ fn check_python_venv() {
             .expect("Failed to execute `uv sync`");
     }
 
+    assert!(
+        python_executable.exists(),
+        "Python executable not found at {:?}",
+        python_executable
+    );
+
+
+    // Set PYTHONPATH for searching local packages
+    let site_packages_dir = venv_dir.join("Lib/site-packages");
+    assert!(
+        site_packages_dir.exists(),
+        "site-packages directory not found at {:?}",
+        site_packages_dir
+    );
+    println!("cargo:rustc-env=PYTHONPATH={}", site_packages_dir.to_str().unwrap());
+
     println!("cargo:rerun-if-changed={}", venv_dir.to_str().unwrap());
     println!(
         "cargo:rerun-if-changed={}",

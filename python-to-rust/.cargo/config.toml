@@ -1,0 +1,4 @@
+[env]
+
+# for running pyo3 in rust
+VIRTUAL_ENV = { value = ".venv", relative = true }
