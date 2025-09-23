@@ -183,7 +183,7 @@ A `.pyi` file will be generated in the crate root directory (e.g. `rust_to_pytho
 
 If you want to run rust codes that use pyo3 (e.g. [tests/test.rs](./tests/test.rs)), make sure the Python environment is correctly set.
 
-pyo3 requires Python executable to be found in the environment. You can set the `VIRTUAL_ENV` environment variable in [.cargo/config.toml](./.cargo/config.toml):
+`pyo3` requires Python executable to be found in the environment. You can set the `VIRTUAL_ENV` environment variable in [.cargo/config.toml](./.cargo/config.toml):
 
 ```toml
 [env]
@@ -194,47 +194,82 @@ VIRTUAL_ENV = { value = ".venv", relative = true }
 In windows, you may also need to append the python DLL directory to the `PATH` variable. You can set this in [build.rs](./build.rs):
 
 ```rs
-use std::env;
 use std::path::Path;
 
 fn main() {
-    #[cfg(target_os = "windows")]
+    check_python_venv();
     link_windows_python_dll();
 }
 
-#[cfg(target_os = "windows")]
-fn link_windows_python_dll() {
-    let venv_dir = Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join(".venv");
-    let python_executable = venv_dir.join("Scripts/python.exe");
+fn check_python_venv() {
+    let venv_dir_str = std::env::var("VIRTUAL_ENV").unwrap_or_default();
+    let venv_dir = Path::new(&venv_dir_str);
+    let python_executable = if cfg!(windows) {
+        &venv_dir.join("Scripts/python.exe")
+    } else {
+        &venv_dir.join("bin/python")
+    };
 
-    let venv_dir_str = &venv_dir.to_str().unwrap().to_string();
-    let python_path_str = &python_executable.to_str().unwrap().to_string();
-
-    if !python_executable.exists() {
+    let should_init_venv = !venv_dir.exists() || !python_executable.exists();
+    if should_init_venv {
         println!(
-            "cargo:warning=Python executable not found under {}, trying to install python dependencies using 'uv sync'",
-            venv_dir_str
+            "cargo:warning=Virtual environment not found at {:?}. Running `uv sync`...",
+            venv_dir
         );
+
+        // Activate virtual environment using `uv`
         std::process::Command::new("uv")
-            .args(&["sync"])
-            .output()
-            .expect("Failed to execute uv sync command");
+            .arg("sync")
+            .status()
+            .expect("Failed to execute `uv sync`");
     }
 
     assert!(
         python_executable.exists(),
-        "Python executable not found at {}",
-        python_path_str
+        "Python executable not found at {:?}",
+        python_executable
     );
 
-    let output = std::process::Command::new(python_path_str)
+
+    // Set PYTHONPATH for searching local packages
+    let site_packages_dir = venv_dir.join("Lib/site-packages");
+    assert!(
+        site_packages_dir.exists(),
+        "site-packages directory not found at {:?}",
+        site_packages_dir
+    );
+    println!("cargo:rustc-env=PYTHONPATH={}", site_packages_dir.to_str().unwrap());
+
+    println!("cargo:rerun-if-changed={}", venv_dir.to_str().unwrap());
+    println!(
+        "cargo:rerun-if-changed={}",
+        python_executable.to_str().unwrap()
+    );
+}
+
+#[cfg(target_os = "windows")]
+fn link_windows_python_dll() {
+    let venv_dir_str = std::env::var("VIRTUAL_ENV").unwrap_or_default();
+    let venv_dir = Path::new(&venv_dir_str);
+    let python_executable = &venv_dir.join("Scripts/python.exe");
+    let python_exe_str = &python_executable.to_str().unwrap();
+
+    check_python_venv();
+    assert!(
+        python_executable.exists(),
+        "Python executable not found at {:?}",
+        python_exe_str
+    );
+
+    // Add python DLL directory to PATH
+    let output = std::process::Command::new(python_exe_str)
         .args(&["-c", "import sys; print(sys.base_exec_prefix)"])
         .output()
         .expect("Failed to execute python command to get executable path");
     match output.status.success() {
         true => {
             let py_dll_dir = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let path_env = env::var("PATH").unwrap_or_default();
+            let path_env = std::env::var("PATH").unwrap_or_default();
             println!("cargo:rustc-env=PATH={};{}", path_env, py_dll_dir);
         }
         false => {
