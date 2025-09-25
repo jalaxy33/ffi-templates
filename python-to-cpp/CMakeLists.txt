@@ -3,6 +3,10 @@ project(python-to-cpp VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# --------------------------------------------------------------------------------
+# Setup Python and pybind11
+# --------------------------------------------------------------------------------
+
 # setup python environment
 set(PYTHON_VENV_DIR ${CMAKE_SOURCE_DIR}/.venv)
 
@@ -28,6 +32,12 @@ endif()
 # find pybind11 package for CMake
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
+
+
+# --------------------------------------------------------------------------------
+# Setup target
+# --------------------------------------------------------------------------------
+
 
 # build executable
 set(TARGET_NAME demo)
