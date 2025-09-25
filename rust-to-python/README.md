@@ -1,7 +1,7 @@
 # Rust to Python Template
 
 
-A template project for creating Python packages with Rust extensions using [PyO3](https://pyo3.rs/) and [Maturin](https://maturin.rs/).
+A template project for creating Rust extensions for Python using [PyO3](https://pyo3.rs/) and [Maturin](https://maturin.rs/).
 
 
 **Hint**: You can initialize a new rust-python interop project with the following commands:
