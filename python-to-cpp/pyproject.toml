@@ -4,11 +4,7 @@ version = "0.1.0"
 description = "A demo project to call python functions in C++."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "numpy>=2.3.3",
-]
+dependencies = ["numpy>=2.3.3"]
 
 [dependency-groups]
-dev = [
-    "pybind11>=3.0.1",
-]
+dev = ["pybind11>=3.0.1"]
