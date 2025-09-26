@@ -18,7 +18,12 @@ endif()
 set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})  # for compatibility with pybind11
 
 if (NOT EXISTS ${PYTHON_EXECUTABLE})
-    message(FATAL_ERROR "Python executable not found at ${PYTHON_EXECUTABLE}. Please create a virtual environment at ${PYTHON_VENV_DIR} and install the required packages.")   
+    message(WARNING "Python executable not found at ${PYTHON_VENV_DIR}. Running 'uv sync' to install python dependencies...")   
+    # execute uv sync under CMAKE_SOURCE_DIR
+    execute_process(
+        COMMAND uv sync
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
 endif()
 
 # set pybind11 dependency

@@ -17,7 +17,7 @@ A simple template to demonstrate how to call python functions in C++.
 ## Usage
 
 ```bash
-# 1. Install python dependencies (pybind11 is required, others are optional)
+# [Optional] 1. Install python dependencies (pybind11 is required, others are optional)
 uv sync
 
 # 2. Configure and build C++ target
@@ -47,16 +47,26 @@ else()
 endif()
 set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})  # for compatibility with pybind11
 
+if (NOT EXISTS ${PYTHON_EXECUTABLE})
+    message(WARNING "Python executable not found at ${PYTHON_VENV_DIR}. Running 'uv sync' to install python dependencies...")   
+    # execute uv sync under CMAKE_SOURCE_DIR
+    execute_process(
+        COMMAND uv sync
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
 
 # set pybind11 dependency
 set(pybind11_ROOT ${PYTHON_VENV_DIR}/Lib/site-packages/pybind11)
 set(pybind11_DIR ${pybind11_ROOT}/share/cmake/pybind11)
 
+if (NOT EXISTS ${pybind11_ROOT})
+    message(FATAL_ERROR "pybind11 not found at ${pybind11_ROOT}. Please install pybind11 in the virtual environment.")
+endif()
 
 # find pybind11 package for CMake
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
-
 ```
 
 Link `pybind11::embed` to your target:
