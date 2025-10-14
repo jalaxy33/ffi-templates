@@ -8,3 +8,12 @@ dependencies = ["numpy>=2.3.3"]
 
 [dependency-groups]
 dev = ["pybind11>=3.0.1"]
+
+
+[[tool.uv.index]]
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+default = true
+
+[tool.uv.pip]
+index-url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+
