@@ -16,103 +16,110 @@ A simple template to demonstrate how to call python functions in C++.
 
 ## Usage
 
+1. Configure and build C++ target
 ```bash
-# [Optional] 1. Install python dependencies (pybind11 is required, others are optional)
-uv sync
-
-# 2. Configure and build C++ target
 cmake -B build && cmake --build build  # Debug build
 cmake -B build && cmake --build build --config Release  # Release build
+```
 
-# 3. Run the executable, change `demo` to actual target name
+2. Run the executable, change `demo` to actual target name
+```bash
 ./build/Debug/demo.exe  # On Windows
 ./build/Debug/demo      # On Linux/Mac
 ```
 
 
-## Keypoints
+## Notes
 
-### 1. Setting up Python Environment in C++
+### 1. Setting up Python environment in C++
 
-Set up `pybind11` in [CMakeLists.txt](./CMakeLists.txt):
-
-```cmake
-# setup python environment
-set(PYTHON_VENV_DIR ${CMAKE_SOURCE_DIR}/.venv)
-
-if (WIN32)
-    set(PYTHON_EXECUTABLE ${PYTHON_VENV_DIR}/Scripts/python.exe)
-else()
-    set(PYTHON_EXECUTABLE ${PYTHON_VENV_DIR}/bin/python)
-endif()
-set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})  # for compatibility with pybind11
-
-if (NOT EXISTS ${PYTHON_EXECUTABLE})
-    message(WARNING "Python executable not found at ${PYTHON_VENV_DIR}. Running 'uv sync' to install python dependencies...")   
-    # execute uv sync under CMAKE_SOURCE_DIR
-    execute_process(
-        COMMAND uv sync
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
-endif()
-
-# set pybind11 dependency
-set(pybind11_ROOT ${PYTHON_VENV_DIR}/Lib/site-packages/pybind11)
-set(pybind11_DIR ${pybind11_ROOT}/share/cmake/pybind11)
-
-if (NOT EXISTS ${pybind11_ROOT})
-    message(FATAL_ERROR "pybind11 not found at ${pybind11_ROOT}. Please install pybind11 in the virtual environment.")
-endif()
-
-# find pybind11 package for CMake
-set(PYBIND11_FINDPYTHON ON)
-find_package(pybind11 CONFIG REQUIRED)
-```
-
-Link `pybind11::embed` to your target:
+Define a function to setup python environment in [`CMakeLists.txt`](./CMakeLists.txt):
 
 ```cmake
-target_link_libraries(${TARGET_NAME} PRIVATE pybind11::embed)
-```
+function(setup_python targetname)
+    # find uv executable
+    find_program(UV_EXECUTABLE uv REQUIRED)
 
+    # aliasing python command using uv
+    set(UV_PYTHON "uv run python")
 
-**Windows specific**: Copy `pythonXX.dll` to target output directory:
-
-```cmake
-# Get python info
-execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('installed_platbase'))"
-    OUTPUT_VARIABLE PYTHON_SYS_ROOT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('py_version_nodot'))"
-    OUTPUT_VARIABLE PYTHON_VERSION_NODOT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-
-# Windows specific settings: copy python DLL to output directory
-if(WIN32)
-    set(PYTHON_DLL_PATH "${PYTHON_SYS_ROOT}/python${PYTHON_VERSION_NODOT}.dll")
-
-    # Copy Python DLL to output directory
-    if(EXISTS ${PYTHON_DLL_PATH})
-        add_custom_command(
-            TARGET ${TARGET_NAME}
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${PYTHON_DLL_PATH}
-                $<TARGET_FILE_DIR:${TARGET_NAME}>
-            COMMENT "Copying Python DLL to output directory"
-        )
+    # install python dependencies if not exist
+    set(VENV_DIR ${CMAKE_SOURCE_DIR}/.venv)
+    if (WIN32)
+        set(PYTHON_EXECUTABLE ${VENV_DIR}/Scripts/python.exe)
     else()
-        message(FATAL_ERROR "Python DLL not found at: ${PYTHON_DLL_PATH}")
+        set(PYTHON_EXECUTABLE ${VENV_DIR}/bin/python)
     endif()
 
-endif()
+    if (NOT EXISTS ${VENV_DIR} OR NOT EXISTS ${PYTHON_EXECUTABLE})
+        message(WARNING "No available Python environment found. Running 'uv sync' to install python dependencies...")
+        execute_process(
+            COMMAND uv sync
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+    else()
+        message(STATUS "Using existing Python environment at: ${VENV_DIR}")
+    endif()
+
+    # set pybind11 dependency
+    set(pybind11_ROOT ${VENV_DIR}/Lib/site-packages/pybind11)
+    set(pybind11_DIR ${pybind11_ROOT}/share/cmake/pybind11)
+    set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})  # for compatibility with pybind11
+
+    if (NOT EXISTS ${pybind11_ROOT} OR NOT EXISTS ${pybind11_DIR})
+        message(FATAL_ERROR "Dependency 'pybind11' not found. Please install 'pybind11' first by 'uv add pybind11 --dev'.")
+    endif()
+
+    # find pybind11 package for CMake
+    set(PYBIND11_FINDPYTHON ON)
+    find_package(pybind11 CONFIG REQUIRED)
+
+    # link pybind11 to target
+    target_link_libraries(${targetname} PRIVATE pybind11::embed)
+
+    # Get python info
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('installed_platbase'))"
+        OUTPUT_VARIABLE PYTHON_SYS_ROOT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('py_version_nodot'))"
+        OUTPUT_VARIABLE PYTHON_SHORT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    string(REPLACE "\\" "/" PYTHON_SYS_ROOT "${PYTHON_SYS_ROOT}")
+    
+    # Windows specific settings: copy python lib DLL to output directory
+    if (WIN32)
+        # Determine the python DLL name
+        set(PYTHON_LIB_NAME "python${PYTHON_SHORT_VERSION}")
+        set(PYTHON_LIB "${PYTHON_SYS_ROOT}/${PYTHON_LIB_NAME}.dll")
+
+        if (NOT EXISTS ${PYTHON_LIB})
+            message(FATAL_ERROR "Python lib not found at '${PYTHON_LIB}'.")
+        endif()
+
+        add_custom_command(TARGET ${targetname} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${PYTHON_LIB}
+            $<TARGET_FILE_DIR:${targetname}>
+            COMMENT "Copying ${PYTHON_LIB_NAME}.dll to output directory."
+        )
+    endif()
+
+endfunction()
+
 ```
 
+Call `setup_python` after defining your target:
+
+```cmake
+set(targetname demo)
+add_executable(${targetname} src/main.cpp)
+setup_python(${targetname})
+```
 
 ## 2. Setup runtime python interpreter environment
 
@@ -123,9 +130,8 @@ In order to run python code in C++ normally, `PYTHONPATH` environment variable n
 ```cmake
 # set runtime PYTHONHOME environment variable
 set(PYTHON_HOME_PATH "${PYTHON_SYS_ROOT}")
-string(REPLACE "\\" "\\\\" PYTHON_HOME_PATH_ESCAPED "${PYTHON_HOME_PATH}")
-# set compile flag (PYTHON_HOME_PATH)
-target_compile_definitions(${TARGET_NAME} PRIVATE PYTHON_HOME_PATH="${PYTHON_HOME_PATH_ESCAPED}")
+string(REPLACE "\\" "/" PYTHON_HOME_PATH "${PYTHON_HOME_PATH}")
+target_compile_definitions(${targetname} PRIVATE PYTHON_HOME_PATH="${PYTHON_HOME_PATH}")
 ```
 
 **step 2**: define a function to call `SetEnvironmentVariableA` ( e.g. [python_helper.h](./include/python_helper.h) ):
@@ -158,10 +164,9 @@ The package installed in virtual environment (e.g. `.venv/Lib/site-packages`) is
 
 ```cmake
 # pass virtual environment site-packages to runtime
-set(VENV_PACKAGES_DIR "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages")
-string(REPLACE "\\" "\\\\" VENV_PACKAGES_DIR_ESCAPED "${VENV_PACKAGES_DIR}")
-# set compile flag (VENV_PACKAGES_DIR)
-target_compile_definitions(${TARGET_NAME} PRIVATE VENV_PACKAGES_DIR="${VENV_PACKAGES_DIR_ESCAPED}")
+set(VENV_PACKAGES_DIR "${VENV_DIR}/Lib/site-packages")
+string(REPLACE "\\" "/" VENV_PACKAGES_DIR "${VENV_PACKAGES_DIR}")
+target_compile_definitions(${targetname} PRIVATE VENV_PACKAGES_DIR="${VENV_PACKAGES_DIR}")
 ```
 
 **step 2**: define a function to add the path to `sys.path` ( e.g. [python_helper.h](./include/python_helper.h) ):
@@ -253,5 +258,4 @@ py::module_ my_module = py::module_::import("example"); // load src/example.py
 py::object add_func = my_module.attr("add");
 int result = add_func(3, 4).cast<int>();
 std::cout << "Result of example.add(3, 4)=" << result << std::endl;
-
 ```
