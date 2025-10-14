@@ -1,72 +1,31 @@
 #include <iostream>
-#include <string>
-#include <stdexcept>
-#include "rust_to_cpp.h" // Header for Rust functions
+#include "cxx.h"
+#include "lib.rs.h"
 
-class TestRunner {
-public:
-    // Simple test runner with basic assertions
+int main(int, char**){
     
-    // Run a simple test case
-    static void run_test(const std::string& test_name, bool condition) {
-        std::cout << "Running: " << test_name << " ... ";
-        if (condition) {
-            std::cout << "PASS" << std::endl;
-        } else {
-            std::cout << "FAIL" << std::endl;
-        }
-    }
-    
-    // Assert that two integers are equal
-    static void assert_equal(int expected, int actual) {
-        if (expected != actual) {
-            throw std::runtime_error("Expected " + std::to_string(expected) + 
-                                   " but got " + std::to_string(actual));
-        }
-    }
-    
-    // Example test method
-    static void test_add_function() {
-        std::cout << "\n=== Running Unit Tests ===" << std::endl;
-        
-        // Test case 1: Basic addition
-        try {
-            int result = add(2, 3);
-            assert_equal(5, result);
-            run_test("test_basic_addition", true);
-        } catch (...) {
-            run_test("test_basic_addition", false);
-        }
-        
-        // Test case 2: Adding zero
-        try {
-            int result = add(5, 0);
-            assert_equal(5, result);
-            run_test("test_add_zero", true);
-        } catch (...) {
-            run_test("test_add_zero", false);
-        }
-        
-        // Test case 3: Negative numbers
-        try {
-            int result = add(-2, -3);
-            assert_equal(-5, result);
-            run_test("test_negative_numbers", true);
-        } catch (...) {
-            run_test("test_negative_numbers", false);
-        }
-        
-        std::cout << "=== Tests Complete ===" << std::endl;
-    }
-};
+    // --- Testing basic functions ---
+    std::cout << "--- Testing basic functions ---\n";
 
-int main()
-{
-    say_hello();
-    call_inner_function();
+    std::cout << "2 + 3 = " << add(2, 3) << "\n";
+    std::cout << greet("World") << "\n";
+
+    // --- Testing MyStruct ---
+    std::cout << "\n--- Testing MyStruct ---\n";
+    auto my_struct = create_my_struct("CppStruct");
+    std::cout << "Created struct with name: " << get_struct_name(*my_struct) << "\n";
+
+    add_value_to_struct(*my_struct, 10);
+    add_value_to_struct(*my_struct, 20);
+    add_value_to_struct(*my_struct, 30);
     
-    // Run unit tests
-    TestRunner::test_add_function();
+    auto values = get_struct_values(*my_struct);
+    std::cout << "Values in struct: ";
+    for (size_t i = 0; i < values.size(); ++i) {
+        std::cout << values[i];
+        if (i < values.size() - 1) std::cout << ", ";
+    }
+    std::cout << "\n";
     
     return 0;
 }
