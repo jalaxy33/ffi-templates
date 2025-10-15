@@ -17,6 +17,7 @@ function(setup_rust_library target_name)
     find_program(CARGO_EXECUTABLE cargo REQUIRED)
     
     # Build Rust library in release mode during configuration
+    message(NOTICE "Building Rust library in 'Release' mode...")
     execute_process(
         COMMAND cargo build --release
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -70,7 +71,7 @@ function(setup_rust_library target_name)
 endfunction()
 
 # =============================================================================
-# Executable Target Configuration
+# Target Configuration
 # =============================================================================
 
 set(targetname demo)
