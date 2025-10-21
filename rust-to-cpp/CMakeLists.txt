@@ -7,68 +7,75 @@ set(CMAKE_CXX_STANDARD 17)
 # Rust Library Configuration
 # =============================================================================
 
-set(RUST_LIB_NAME librust)   # replace `librust` with actual Rust library name
-set(RUST_PROJECT_NAME rust-to-cpp)  # replace `rust-to-cpp` with actual Cargo project name
-set(RUST_TARGET_DIR ${CMAKE_SOURCE_DIR}/target)
-
-# Setup Rust library integration for target
-function(setup_rust_library target_name)
-    # Find Cargo executable
-    find_program(CARGO_EXECUTABLE cargo REQUIRED)
-    
-    # Build Rust library in release mode during configuration
-    message(NOTICE "Building Rust library in 'Release' mode...")
-    execute_process(
-        COMMAND cargo build --release
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
-    
-    # Define library paths (always use release)
-    set(rust_lib_dir "${RUST_TARGET_DIR}/release")
-    set(rust_lib_file "${CMAKE_STATIC_LIBRARY_PREFIX}${RUST_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    
+function(setup_rust_library targetname)
     # Fix Windows MSVC runtime library compatibility
     if(WIN32 AND MSVC)
-        target_compile_options(${target_name} PRIVATE /MD)
+        target_compile_options(${targetname} PRIVATE /MD)
     endif()
-    
-    # Setup CXX bridge include paths and sources
-    target_include_directories(${target_name} PRIVATE 
-        ${RUST_TARGET_DIR}/cxxbridge/rust
-        ${RUST_TARGET_DIR}/cxxbridge/${RUST_PROJECT_NAME}/src
+
+
+    # Ensure the Rust library is built
+    set(RUST_TARGET_DIR ${CMAKE_SOURCE_DIR}/target)
+    set(rust_lib_dir ${RUST_TARGET_DIR}/release)   # assuming release build
+
+    if(NOT EXISTS ${rust_lib_dir})
+        message(FATAL_ERROR "Rust library not found at ${rust_lib_dir}. Please build the Rust project first with 'cargo build --release'.")
+    endif()
+
+    # Search for the Rust library
+    file(GLOB rust_lib_files
+        "${rust_lib_dir}/${CMAKE_STATIC_LIBRARY_PREFIX}*${CMAKE_SHARED_LIBRARY_SUFFIX}"
     )
-    
-    file(GLOB cxx_bridge_src "${RUST_TARGET_DIR}/cxxbridge/${RUST_PROJECT_NAME}/src/*.cc")
-    if(cxx_bridge_src)
-        target_sources(${target_name} PRIVATE ${cxx_bridge_src})
-    endif()
-        
-    # Link Rust library
-    set(rust_lib_suffix "$<IF:$<PLATFORM_ID:Windows>,.lib,>")
-    target_link_libraries(${target_name} PRIVATE "${rust_lib_dir}/${rust_lib_file}${rust_lib_suffix}")
-    
-    # Link CXX runtime library
-    file(GLOB cxx_dirs "${rust_lib_dir}/build/cxx-*/out")
-    if(cxx_dirs)
-        list(GET cxx_dirs 0 cxx_dir)
-        file(GLOB cxx_lib "${cxx_dir}/*${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if(cxx_lib)
-            target_link_libraries(${target_name} PRIVATE ${cxx_lib})
+
+    # link Rust library
+    foreach(rust_lib IN LISTS rust_lib_files)
+        if (WIN32)
+            set(rust_lib "${rust_lib}.lib")
         endif()
-    else()
-        message(WARNING "CXX library not found for release build")
-    endif()
+        target_link_libraries(${targetname} PRIVATE ${rust_lib})
+    endforeach()
+
     
+    # Set include directories for cxx generated headers
+    file(GLOB cxxbridge_include_dirs
+        "${RUST_TARGET_DIR}/cxxbridge/*/src"
+    )
+    target_include_directories(${targetname} PRIVATE
+        ${RUST_TARGET_DIR}/cxxbridge
+        ${RUST_TARGET_DIR}/cxxbridge/rust
+        ${cxxbridge_include_dirs}
+    )
+
+    # Gather cxxbridge generated source files
+    file(GLOB cxxbridge_src
+        "${RUST_TARGET_DIR}/cxxbridge/*/src/*.rs.cpp"
+        "${RUST_TARGET_DIR}/cxxbridge/*/src/*.rs.cc"
+    )
+
+    if (cxxbridge_src)
+        target_sources(${targetname} PRIVATE ${cxxbridge_src})
+    endif()
+
+    # link cxx library
+    file(GLOB cxx_lib_files
+        "${rust_lib_dir}/build/cxx-*/out/*${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    )
+    foreach(cxx_lib IN LISTS cxx_lib_files)
+        target_link_libraries(${targetname} PRIVATE ${cxx_lib})
+    endforeach()
+
     # Copy DLL on Windows
     if(WIN32)
-        add_custom_command(TARGET ${target_name} POST_BUILD
+        add_custom_command(TARGET ${targetname} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${rust_lib_dir}/${rust_lib_file}"
-            $<TARGET_FILE_DIR:${target_name}>
+            "${rust_lib_files}"
+            $<TARGET_FILE_DIR:${targetname}>
             COMMENT "Copying Rust DLL for $<CONFIG>"
         )
     endif()
+
 endfunction()
+
 
 # =============================================================================
 # Target Configuration
