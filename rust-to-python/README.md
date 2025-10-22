@@ -4,6 +4,7 @@
 A template project for creating Rust extensions for Python using [PyO3](https://pyo3.rs/) and [Maturin](https://maturin.rs/).
 
 
+
 **Hint**: You can initialize a new rust-python interop project with the following commands:
 
 ```bash
@@ -94,7 +95,7 @@ use pyo3::prelude::*;
 
 /// [IMPORTANT!!!] Set your module name to match `module-name` in pyproject.toml
 #[pymodule]
-fn rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> { 
+fn rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // ...
     Ok(())
 }
@@ -278,7 +279,3 @@ fn link_windows_python_dll() {
     }
 }
 ```
-
-
-
-

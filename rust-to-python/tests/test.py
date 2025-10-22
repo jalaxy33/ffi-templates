@@ -34,7 +34,6 @@ if __name__ == "__main__":
     calc.reset()
     print(f"After reset: {calc}, value = {calc.get_value()}")
 
-
     test_sum_as_string()
     test_process_numbers()
     test_calculator()
