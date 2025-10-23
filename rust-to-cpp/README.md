@@ -12,24 +12,31 @@ A simple template for creating a Rust library that can be called from C++ using 
 ## Toolchain
 
 - **[cxx](https://cxx.rs/)**: Safe interop between Rust and C++. Install it with：
-```bash
-cargo add cxx
-cargo add cxx-build --build --features parallel
-```
+    ```bash
+    cargo add cxx
+    cargo add cxx-build --build --features parallel
+    ```
 
 ## Usage
 
-1. Configure and build the project using CMake:
-```bash
-cmake -B build && cmake --build build  # Debug build
-cmake -B build && cmake --build build --config Release  # Release build
-```
+1. Configure the C++ project using CMake:
 
-2. Run the executable (change `demo` to actual target name):
-```bash
-./build/Debug/demo.exe  # On Windows
-./build/Debug/demo      # On Linux/Mac
-```
+    ```bash
+    cmake -B build
+    ```
+
+2. Build the C++ project:
+
+    ```bash
+    cmake --build build   # debug build
+    cmake --build build --config Release # release build
+    ```
+
+3. Run the executable (change `demo` to actual target name):
+    ```bash
+    ./build/Debug/demo.exe  # On Windows (Debug build)
+    ./build/Debug/demo      # On Linux/Mac (Debug build)
+    ```
 
 
 ## Notes

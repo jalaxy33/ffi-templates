@@ -1,6 +1,17 @@
-cmake_minimum_required(VERSION 3.10.0)
-project(rust-to-cpp VERSION 0.1.0 LANGUAGES C CXX)
+# =============================================================================
+# Preamble
+# =============================================================================
 
+cmake_minimum_required(VERSION 3.10.0)
+
+# generate `compile_commands.json` for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# =============================================================================
+# Project Configuration
+# =============================================================================
+
+project(rust-to-cpp VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # =============================================================================
@@ -18,7 +29,11 @@ function(setup_rust_library targetname)
     set(rust_lib_dir ${RUST_TARGET_DIR}/release)   # assuming release build
 
     if(NOT EXISTS ${rust_lib_dir})
-        message(FATAL_ERROR "Rust library not found at ${rust_lib_dir}. Please build the Rust library first with 'cargo build --release'.")
+        message(WARNING "Rust library not found. Building Rust library now...")
+        execute_process(
+            COMMAND cargo build --release
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
     endif()
 
     # Search for the Rust library

@@ -18,8 +18,8 @@ A simple template to demonstrate how to call python functions in C++.
 
 1. Configure and build C++ target
 ```bash
-cmake -B build && cmake --build build  # Debug build
-cmake -B build && cmake --build build --config Release  # Release build
+cmake -B build && cmake -B build  # Debug build
+cmake -B build && cmake -B build --config Release  # Release build
 ```
 
 2. Run the executable, change `demo` to actual target name
