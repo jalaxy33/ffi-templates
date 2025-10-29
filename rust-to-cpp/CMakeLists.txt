@@ -14,19 +14,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(rust-to-cpp VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
+
 # =============================================================================
 # Rust Library Configuration
 # =============================================================================
-
 function(setup_rust_library targetname)
     # Fix Windows MSVC runtime library compatibility
+    # Always use /MD (Release CRT) to match Rust and vcpkg Release libraries
     if(WIN32 AND MSVC)
         target_compile_options(${targetname} PRIVATE /MD)
+        # Disable iterator debug level in Debug builds to match Release libraries
+        # Use generator expression to work with multi-config generators like Visual Studio
+        target_compile_definitions(${targetname} PRIVATE 
+            $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>
+        )
     endif()
 
     # Ensure the Rust library is built
     set(RUST_TARGET_DIR ${CMAKE_SOURCE_DIR}/target)
-    set(rust_lib_dir ${RUST_TARGET_DIR}/release)   # assuming release build
+    set(rust_lib_dir ${RUST_TARGET_DIR}/release)   # always use release build for compatibility
 
     if(NOT EXISTS ${rust_lib_dir})
         message(WARNING "Rust library not found. Building Rust library now...")
@@ -49,7 +55,7 @@ function(setup_rust_library targetname)
         target_link_libraries(${targetname} PRIVATE ${rust_lib})
     endforeach()
 
-    
+
     # Set include directories for cxx generated headers
     file(GLOB cxxbridge_include_dirs
         "${RUST_TARGET_DIR}/cxxbridge/*/src"
@@ -84,7 +90,7 @@ function(setup_rust_library targetname)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${rust_lib_files}"
             $<TARGET_FILE_DIR:${targetname}>
-            COMMENT "Copying Rust DLL for $<CONFIG>"
+            COMMENT "Copying Rust DLL for $<CONFIG>."
         )
     endif()
 
