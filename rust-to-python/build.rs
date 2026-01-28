@@ -2,11 +2,13 @@ use std::path::Path;
 
 fn main() {
     check_python_venv();
+    
+    #[cfg(target_os = "windows")]
     link_windows_python_dll();
 }
 
 fn check_python_venv() {
-    let venv_dir_str = std::env::var("VIRTUAL_ENV").unwrap_or_default();
+    let venv_dir_str = std::env::var("VIRTUAL_ENV").unwrap_or(".venv".to_string());
     let venv_dir = Path::new(&venv_dir_str);
     let python_executable = if cfg!(windows) {
         &venv_dir.join("Scripts/python.exe")
