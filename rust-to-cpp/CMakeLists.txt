@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 # =============================================================================
 # Rust Library Configuration
 # =============================================================================
-function(setup_rust_library targetname)
+function(setup_rust_library targetname rustlibname)
     # Fix Windows MSVC runtime library compatibility
     # Always use /MD (Release CRT) to match Rust and vcpkg Release libraries
     if(WIN32 AND MSVC)
@@ -42,23 +42,17 @@ function(setup_rust_library targetname)
         )
     endif()
 
-    # Search for the Rust library
-    file(GLOB rust_lib_files
-        "${rust_lib_dir}/${CMAKE_STATIC_LIBRARY_PREFIX}*${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    )
-
-    # link Rust library
-    foreach(rust_lib IN LISTS rust_lib_files)
-        if (WIN32)
-            set(rust_lib "${rust_lib}.lib")
-        endif()
-        target_link_libraries(${targetname} PRIVATE ${rust_lib})
-    endforeach()
-
+    # Link Rust library
+    set(rust_lib_path "${rust_lib_dir}/lib${rustlibname}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    if (WIN32)
+        set(rust_lib_path "${rust_lib_path}.lib")
+    endif()
+    target_link_libraries(${targetname} PRIVATE "${rust_lib_path}")
 
     # Set include directories for cxx generated headers
     file(GLOB cxxbridge_include_dirs
         "${RUST_TARGET_DIR}/cxxbridge/*/src"
+        "${RUST_TARGET_DIR}/cxxbridge/*/src/*"
     )
     target_include_directories(${targetname} PRIVATE
         ${RUST_TARGET_DIR}/cxxbridge
@@ -70,6 +64,8 @@ function(setup_rust_library targetname)
     file(GLOB cxxbridge_src
         "${RUST_TARGET_DIR}/cxxbridge/*/src/*.rs.cpp"
         "${RUST_TARGET_DIR}/cxxbridge/*/src/*.rs.cc"
+        "${RUST_TARGET_DIR}/cxxbridge/*/src/*/*.rs.cpp"
+        "${RUST_TARGET_DIR}/cxxbridge/*/src/*/*.rs.cc"
     )
 
     if (cxxbridge_src)
@@ -105,4 +101,4 @@ set(targetname demo)
 add_executable(${targetname} src/main.cpp)
 
 # Setup Rust library build and linking
-setup_rust_library(${targetname})
+setup_rust_library(${targetname} "librust")
