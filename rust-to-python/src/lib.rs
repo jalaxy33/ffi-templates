@@ -50,7 +50,7 @@ impl Calculator {
     }
 }
 
-/// A Python module implemented in Rust.
+/// Export rust library as Python module.
 #[pymodule]
 fn rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
