@@ -33,8 +33,13 @@ A simple template for creating a Rust library that can be called from C++ using 
     
 3. Run the executable (change `demo` to actual target name):
     ```bash
-    ./build/Debug/demo.exe  # On Windows (Debug build)
-    ./build/Debug/demo      # On Linux/Mac (Debug build)
+    # Debug build
+    ./build/Debug/demo.exe  # On Windows
+    ./build/Debug/demo      # On Linux/Mac
+
+    # Release build
+    ./build/Release/demo.exe  # On Windows
+    ./build/Release/demo      # On Linux/Mac
     ```
 
 
