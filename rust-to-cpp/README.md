@@ -19,19 +19,18 @@ A simple template for creating a Rust library that can be called from C++ using 
 
 ## Usage
 
-1. Configure the C++ project using CMake:
+1. Configure and build the C++ project using CMake:
 
     ```bash
-    cmake -B build
+    # Debug
+    cmake -B build/Debug -DCMAKE_BUILD_TYPE=Debug
+    cmake --build build/Debug
+
+    # Release
+    cmake -B build/Release -DCMAKE_BUILD_TYPE=Release
+    cmake --build build/Release
     ```
-
-2. Build the C++ project:
-
-    ```bash
-    cmake --build build   # debug build
-    cmake --build build --config Release # release build
-    ```
-
+    
 3. Run the executable (change `demo` to actual target name):
     ```bash
     ./build/Debug/demo.exe  # On Windows (Debug build)
