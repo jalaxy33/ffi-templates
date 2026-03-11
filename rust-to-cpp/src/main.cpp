@@ -1,6 +1,6 @@
 #include <iostream>
 #include "cxx.h"
-#include "lib.rs.h"
+#include "rust-to-cpp/src/lib.rs.h"
 
 int main(int, char**){
     
